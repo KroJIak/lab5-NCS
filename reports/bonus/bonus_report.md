@@ -4,7 +4,7 @@ Lab 5 DevSecOps   |   Bonus task   |   23 November 2026
 
 I patched the B301 finding that I described in my Task 4 report. The change is in the application code, not in a dependency version.
 
-Repository: [Retr0-46/lab5-NCS](https://github.com/Retr0-46/lab5-NCS)   |   Vulnerable commit: `54d165f`   |   Fixed commit: `ad465c5`
+Repository: [Retr0-46/lab5-NCS](https://github.com/Retr0-46/lab5-NCS)   |   Vulnerable commit: `54d165f`   |   Fix commits: `ad465c5` for the code, `7aad5a2` for the key handling and the tests
 
 Files changed: dockerized_labs/insec_des_lab/main.py, dockerized_labs/insec_des_lab/test_app.py, dockerized_labs/insec_des_lab/entrypoint.sh, dockerized_labs/insec_des_lab/Dockerfile
 
@@ -113,7 +113,7 @@ The DAST job still reports its warnings too. ZAP found missing security headers 
 
 ## Pipeline run
 
-The scan that proves the fix is here: [CI run 45151857739](https://github.com/KroJIak/lab5-NCS/actions/runs/45151857739). It runs on the commit that carries the patch, and the `bandit-findings` artifact of that run holds the numbers above.
+The scan that proves the fix is here: [CI run 45153049583](https://github.com/KroJIak/lab5-NCS/actions/runs/45153049583). It runs on a commit that carries the whole patch, and the `bandit-findings` artifact of that run holds the numbers above.
 
 The Bandit job in that run ends with a red mark, which is the expected result. The DAST job produced a ZAP report for the first time, and that report is in reports/dast.
 

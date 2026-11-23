@@ -32,7 +32,7 @@ The `-a` flag adds the alpha passive scan rules and `-j` uses the modern spider 
 
 ## Two more problems we had to fix
 
-**The report was not uploaded.** The action version we had, v0.12.0, uses an old version of the artifacts library. Its upload step failed with `Create Artifact Container failed: The artifact name zap_scan is not valid`, even though the name itself was fine. The scan ran and the findings were in the job log, but the report file was lost. The action was upgraded to v0.15.0, which uses the current library.
+**The report was uploaded by our step, but not by the action.** The action version the job used, v0.12.0, uploads the report with an old version of the artifacts library. Its own upload step failed with `Create Artifact Container failed: The artifact name zap_scan is not valid`, even though the name itself was fine. The separate `Upload ZAP Report` step in the workflow was not affected, so the report was not lost. The action was upgraded to v0.15.0, and now both uploads work.
 
 **The readiness step waited for the wrong code.** It looked for HTTP 200, but PyGoat answers `/` with a 302 redirect to the login page, so the check could never pass. The step ran out of retries and exited 1, and the ZAP step was skipped every time. The check now accepts any status below 500, and it prints what it got.
 
@@ -97,10 +97,16 @@ Most of the rest is low risk housekeeping. Missing security headers such as `Con
 
 Rule 10031 deserves a second look even though ZAP rates it Informational. The application copies the value of the `login` field into the `value` attribute of an `<input>` tag on the login and signup pages, without encoding it. That is the shape of a cross site scripting bug. The low rating comes from the passive rule, not from a test of the exploit.
 
-The scan has limits worth keeping in mind. ZAP ran without a login, so it only saw the pages that are open to a visitor. The labs behind the login were not scanned, and the report shows no URL under `/lab/` in the findings. The rules were run at the default level plus the alpha passive rules, so a more complete pass would use a full scan with an authenticated context file.
+The scan has limits worth keeping in mind. ZAP ran without a login, so it only saw the pages that are open to a visitor. The report shows the login, signup and password reset pages, the static files, and the two challenge shortcuts `/ba` and `/sql`. Those two answer with a 302 redirect to the login, so no lab was actually reached. The rules were run at the default level plus the alpha passive rules, so a more complete pass would use a full scan with an authenticated context file.
 
-## Why the job is red
+## Why the job is green now
 
-The `ZAP Baseline Scan` step shows a red mark in the run. That is the expected result, the same way the Bandit job is red. ZAP returns a non-zero exit code when it finds alerts, so a scan that finds nothing would be the only case where the step is green.
+The `DAST with OWASP ZAP` job is green in the newest runs, and the report is uploaded twice, as `zap-scan-report` and as `zap-dast-report`.
 
-The reports are uploaded as the artifact `zap-dast-report`, so the findings can be read without opening the job log.
+Two different things were red before, and only one of them was about the findings.
+
+The `ZAP Baseline Scan` step was red because the action could not upload its own artifact. That was the bug in the old action version, and the fix was to upgrade it.
+
+The Bandit job is still red, and that one is on purpose. Bandit returns a non-zero exit code when it finds something, and it finds 52 problems in this repository. A green Bandit job would mean the scanner stopped working.
+
+The DAST job does not go red for the findings, because the action has a `fail_action` input and it is false by default. The alerts are in the report and in the job summary, they just do not change the status of the step.

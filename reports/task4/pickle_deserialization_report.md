@@ -7,7 +7,7 @@ Lab 5 DevSecOps | Task 4 individual finding | 23 November 2026
 
 I picked the unsafe `pickle.loads()` call in the PyGoat insecure deserialization lab. The app takes a base64 blob from a web form and hands it straight to Python's pickle loader. Bandit marked this as a Medium issue with high confidence. My own score for this code path is much higher, and the CVSS section explains why.
 
-Repository: [Retr0-46/lab5-NCS](https://github.com/Retr0-46/lab5-NCS) | Branch: `task4-b301-pickle` | Analysed commit: `54d165f`
+Repository: [Retr0-46/lab5-NCS](https://github.com/Retr0-46/lab5-NCS) | My branch: [KroJIak/lab5-NCS](https://github.com/KroJIak/lab5-NCS/tree/task4-b301-pickle) `task4-b301-pickle`, pull request #2 | Analysed commit: `54d165f`
 
 Affected endpoint: POST /deserialize  
 File: dockerized_labs/insec_des_lab/main.py, line 40
@@ -56,7 +56,7 @@ I use the CWE rather than a CVE here. This weakness belongs to the language and 
 
 ## Local validation
 
-I ran the lab on my own machine with Python 3.13.5, Flask 2.0.1 and Werkzeug 2.3.8, bound to loopback on port 8080. I used a browser to work with the forms so the screenshots below show the real page.
+I ran the lab on my own machine with Python 3.13.5, Flask 2.0.1 and Werkzeug 2.3.8, bound to loopback on port 8080. Those are the versions I had to install to get the old Flask code to start. The lab's own requirements.txt pins Flask 3.0.0 and Werkzeug 3.0.1, and the patched code was tested with those. I used a browser to work with the forms so the screenshots below show the real page.
 
 First I created a normal user with the Create User form. The app returned a base64 token.
 
@@ -148,4 +148,4 @@ I did not test a container escape, I did not try to escalate privileges on the h
 - [FIRST CVSS v3.1 specification](https://www.first.org/cvss/v3.1/specification-document)
 - [OWASP Deserialization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html)
 - [The team CI run for this commit](https://github.com/Retr0-46/lab5-NCS/actions/runs/45008357700)
-- [CI run of my branch with the fix](https://github.com/KroJIak/lab5-NCS/actions/runs/45151857739)
+- [CI run of my branch with the fix](https://github.com/KroJIak/lab5-NCS/actions/runs/45153049583)
