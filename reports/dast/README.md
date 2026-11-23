@@ -20,20 +20,21 @@ ZAP then runs a baseline scan against the running application.
 
 ```yaml
 - name: ZAP Baseline Scan
-  uses: zaproxy/action-baseline@v0.12.0
+  uses: zaproxy/action-baseline@v0.15.0
   with:
     target: 'http://localhost:8000'
     cmd_options: '-a -j'
     allow_issue_writing: false
+    artifact_name: zap-scan-report
 ```
 
 The `-a` flag adds the alpha passive scan rules and `-j` uses the modern spider next to the traditional one.
 
-## A problem we had to fix first
+## Two more problems we had to fix
 
-The job as it was written never reached ZAP. The readiness step waited for HTTP 200, but PyGoat answers `/` with a 302 redirect to the login page, so the check could never pass. The step ran out of retries and exited 1, and the ZAP step was skipped every time.
+**The report was not uploaded.** The action version we had, v0.12.0, uses an old version of the artifacts library. Its upload step failed with `Create Artifact Container failed: The artifact name zap_scan is not valid`, even though the name itself was fine. The scan ran and the findings were in the job log, but the report file was lost. The action was upgraded to v0.15.0, which uses the current library.
 
-The check now accepts any status below 500, and it prints what it got.
+**The readiness step waited for the wrong code.** It looked for HTTP 200, but PyGoat answers `/` with a 302 redirect to the login page, so the check could never pass. The step ran out of retries and exited 1, and the ZAP step was skipped every time. The check now accepts any status below 500, and it prints what it got.
 
 ```
 PyGoat is up (HTTP 302)

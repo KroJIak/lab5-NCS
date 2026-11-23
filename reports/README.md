@@ -42,13 +42,15 @@ The pickle finding was fixed in the application code. Pickle was replaced with J
 
 The Bandit scan goes from 53 findings to 52, and the B301 findings go from 2 to 1. The numbers are in [bonus/bandit-before-after.txt](bonus/bandit-before-after.txt).
 
-## Two bugs in the pipeline
+## Three bugs in the pipeline
 
-Both of them were found while writing the reports, and both of them stopped the scans from running at all.
+All three of them were found while writing the reports, and every one of them stopped a scan from producing its report.
 
 **The DAST job never reached ZAP.** The readiness step waited for HTTP 200, but PyGoat answers `/` with a 302 redirect to the login page. The check could never pass, so the step ran out of retries and ZAP was skipped in every run. The check now accepts any status below 500.
 
 **The image scan could not authenticate.** The error was `could not authenticate: user githubactions not entitled to use Docker Scout`. Docker Scout checks the Docker Hub entitlement of the account it finds in the runner credential store. On a public runner the only credential there is the GitHub token, stored under the name `githubactions`, and that account has no Docker Scout subscription. The job now logs in to Docker Hub first.
+
+**The ZAP report was lost.** The action version the job used, v0.12.0, uploads the report with an old version of the artifacts library, and the upload failed with `Create Artifact Container failed: The artifact name zap_scan is not valid`. The scan itself worked, so only the report file was missing. The action was upgraded to v0.15.0.
 
 The Docker Hub login needs the `DOCKERHUB_USERNAME` and `DOCKERHUB_PASSWORD` repository secrets. A free Docker Hub account is enough. Until somebody with admin rights on the repository adds them, the image scan stops with a message that says exactly that.
 
