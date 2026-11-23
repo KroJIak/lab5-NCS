@@ -4,9 +4,9 @@ Lab 5 DevSecOps   |   Bonus task   |   23 November 2026
 
 I patched the B301 finding that I described in my Task 4 report. The change is in the application code, not in a dependency version.
 
-Repository: [Retr0-46/lab5-NCS](https://github.com/Retr0-46/lab5-NCS)   |   Vulnerable commit: `54d165f`   |   Fixed commit: see the pipeline run link below
+Repository: [Retr0-46/lab5-NCS](https://github.com/Retr0-46/lab5-NCS)   |   Vulnerable commit: `54d165f`   |   Fixed commit: `ad465c5`
 
-Files changed: dockerized_labs/insec_des_lab/main.py, dockerized_labs/insec_des_lab/test_app.py
+Files changed: dockerized_labs/insec_des_lab/main.py, dockerized_labs/insec_des_lab/test_app.py, dockerized_labs/insec_des_lab/entrypoint.sh, dockerized_labs/insec_des_lab/Dockerfile
 
 ## What was wrong
 
@@ -45,6 +45,8 @@ JSON has no way to call a function. Even a valid JSON document can only carry st
 
 The fields are filtered through an allowlist and type checked, so only `username` and `is_admin` are read and both have to have the expected type.
 
+The signing key is the fourth piece. It is read from the `INSEC_DES_SECRET_KEY` environment variable and the lab refuses to start without it, because a key that sits in the source code is a public key. The container generates a random one on each start when the variable is not set, so the key never leaves the container.
+
 ## Before and after
 
 The Bandit scan of the whole repository with the same flags as our CI job gives the following.
@@ -56,7 +58,7 @@ The Bandit scan of the whole repository with the same flags as our CI job gives 
 
 The finding in dockerized_labs/insec_des_lab/main.py is gone. The one in dockerized_labs/software_integrity_lab/app.py is still there because it is a different lab and a different code path, and it was not part of my patch.
 
-The raw numbers are in reports/bonus/bandit-before-after.txt and the Bandit text report after the patch is reports/bonus/bandit-b301-after.txt.
+The raw numbers are in [bandit-before-after.txt](bandit-before-after.txt) and the Bandit text report after the patch is [bandit-b301-after.txt](bandit-b301-after.txt). The `bandit-findings` artifact of the CI run below gives the same numbers, 52 findings with 29 Medium, 23 High and one B301.
 
 ## Running the app after the fix
 
@@ -80,9 +82,9 @@ The pickle payload also fails. The old attack sent a base64 encoded pickle that 
 
 *Figure 3. Before the patch, the server ran the command and showed its output.*
 
-After the patch the same payload produces a decode error and nothing is executed. I also checked that the file the payload wanted to create was not created.
+After the patch the same payload produces a decode error and nothing is executed. I also checked that the file the payload wanted to create was not created, inside the container as well as on my machine.
 
-I added three tests in dockerized_labs/insec_des_lab/test_app.py. They cover the normal flow, the attempt to change the admin flag and the pickle payload. All three pass.
+I added four tests in dockerized_labs/insec_des_lab/test_app.py. They cover the normal flow, the attempt to change the admin flag and two pickle payloads.
 
 ```bash
 python -m unittest dockerized_labs.insec_des_lab.test_app -v
@@ -91,18 +93,21 @@ python -m unittest dockerized_labs.insec_des_lab.test_app -v
 ```
 test_admin_flag_cannot_be_changed ... ok
 test_normal_user_can_be_deserialized ... ok
-test_pickle_payload_is_rejected ... ok
+test_pickle_payload_does_not_run_code ... ok
+test_pickle_payload_output_is_not_shown ... ok
 
-Ran 3 tests in 0.010s
+Ran 4 tests in 0.012s
 
 OK
 ```
 
+I checked that the two payload tests really do catch the old code. I ran them against the vulnerable version from commit `54d165f` and there the payload wrote its marker file and the `id` output appeared in the response. On the patched code neither happens.
+
 ## Why the other scan jobs still fail
 
-The Bandit job in our pipeline still ends with a red mark, and that is expected. My patch removes one finding out of 53. The other 52 stay because they are separate problems in other labs: the app still runs Flask with debug turned on, still binds to all interfaces, still uses weak hashes and still has an `eval()` call in the command injection lab. A red Bandit job is the correct signal for this pipeline, it means the scanner is doing its job.
+The Bandit job in our pipeline still ends with a red mark, and that is expected. My patch removes one finding out of 53. The other 52 stay because they are separate problems in other labs: the app still runs Flask with debug turned on, still binds to all interfaces, still uses weak hashes and still has an `eval()` call in the command injection lab. A red Bandit job is the correct signal for this pipeline. It means the scanner is doing its job.
 
-The Docker Scout job also keeps failing, and this one is not about my code at all. It scans the base image of the PyGoat container, and the base image has critical and high CVEs that nobody has patched. Changing a Python file cannot remove a vulnerability in the operating system layers underneath it.
+The Docker Scout job fails before Scout even starts. The repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_PASSWORD` are not set, so the step that logs in to Docker Hub cannot run and both Scout steps are skipped. Scout needs a Docker Hub account to check, and a free one is enough, but somebody with admin rights on the repository has to add those secrets first. Because the job stops there, this run produced no CVE data at all, so nothing can be said about the base image from it.
 
 The DAST job still reports its warnings too. ZAP found missing security headers and information disclosure on the pages of the main PyGoat application, which is a different application from the lab I patched. The only way to make that job green would be to fix the headers on every page of the whole PyGoat app, which is a much bigger job than this one.
 

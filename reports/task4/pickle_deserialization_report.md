@@ -7,7 +7,7 @@ Lab 5 DevSecOps | Task 4 individual finding | 23 November 2026
 
 I picked the unsafe `pickle.loads()` call in the PyGoat insecure deserialization lab. The app takes a base64 blob from a web form and hands it straight to Python's pickle loader. Bandit marked this as a Medium issue with high confidence.
 
-Repository: [Retr0-46/lab5-NCS](https://github.com/Retr0-46/lab5-NCS) | Analysed commit: `54d165f`
+Repository: [Retr0-46/lab5-NCS](https://github.com/Retr0-46/lab5-NCS) | Branch: `task4-b301-pickle` | Analysed commit: `54d165f`
 
 Affected endpoint: POST /deserialize  
 File: dockerized_labs/insec_des_lab/main.py, line 40
@@ -57,7 +57,6 @@ I use the CWE rather than a CVE here. This weakness belongs to the language and 
 ## Local validation
 
 I ran the lab on my own machine with Python 3.13.5, Flask 2.0.1 and Werkzeug 2.3.8, bound to loopback on port 8080. I used a browser to work with the forms so the screenshots below show the real page.
-
 First I created a normal user with the Create User form. The app returned a base64 token.
 
 ![Create User form returning a base64 token.](images/pickle-normal-user-token.png)
@@ -96,6 +95,8 @@ An attacker needs network access to the `/deserialize` endpoint. The lab router 
 
 Once the payload runs it has the same rights as the Flask process. From there it can read the source code and the config of the app, read or write the files that the process has permission for, take the secrets the app holds and stop the service. The admin case is the mild version. The command execution is the strong one.
 
+In this deployment the process holds the `ADMIN_KEY_123` secret that the admin page shows, and it can rewrite the files of the lab it runs in. A shell as the application user is enough to take over the lab and to reach anything else that runs under the same account.
+
 ## CVSS assessment
 
 I score this as CVSS v3.1 8.8, High, for the Compose deployment that the lab ships. That is my own assessment of this code path, not a score that MITRE assigns to CWE-502. I used the FIRST scoring rules.
@@ -130,7 +131,7 @@ user = User(username=data["username"], is_admin=bool(data.get("is_admin")))
 
 If pickle has to stay, then the bytes need to be signed with a key the server keeps secret. The signature has to be checked before `pickle.loads()` runs. The decoded object has to be checked against an allowlist of expected types. The deserialization should also run in a low privilege process.
 
-The bonus task implements this idea and adds an HMAC-SHA256 signature on top of the JSON. Before and after numbers are in reports/bonus/bonus_report.md.
+The bonus task implements this idea and adds an HMAC-SHA256 signature on top of the JSON. Before and after numbers are in [the bonus report](../bonus/bonus_report.md).
 
 ## Verification scope
 
@@ -140,9 +141,10 @@ I did not test a container escape, I did not try to escalate privileges on the h
 
 ## References
 
-- [Source file at commit 54d165f](https://github.com/Retr0-46/lab5-NCS/blob/54d165f2f8b70a56fbb4e39aac3f02a5d0d7a933/dockerized_labs/insec_des_lab/main.py)
+- [Source file at commit 54d165f](https://github.com/Retr0-46/lab5-NCS/blob/54d165fbde62deca2ffc11666842f2a9a34327f2/dockerized_labs/insec_des_lab/main.py)
 - [Bandit B301 documentation](https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b301-pickle)
 - [MITRE CWE-502](https://cwe.mitre.org/data/definitions/502.html)
 - [FIRST CVSS v3.1 specification](https://www.first.org/cvss/v3.1/specification-document)
 - [OWASP Deserialization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html)
-- [Our CI run for this commit](https://github.com/Retr0-46/lab5-NCS/actions/runs/45008357700)
+- [The team CI run for this commit](https://github.com/Retr0-46/lab5-NCS/actions/runs/45008357700)
+- [CI run of my branch with the fix](https://github.com/KroJIak/lab5-NCS/actions/runs/45147326709)
