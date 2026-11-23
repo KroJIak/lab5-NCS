@@ -7,7 +7,7 @@ Lab 5 DevSecOps | Task 4 individual finding | 23 November 2026
 
 I picked the unsafe `pickle.loads()` call in the PyGoat insecure deserialization lab. The app takes a base64 blob from a web form and hands it straight to Python's pickle loader. Bandit marked this as a Medium issue with high confidence. My own score for this code path is much higher, and the CVSS section explains why.
 
-Repository: [Retr0-46/lab5-NCS](https://github.com/Retr0-46/lab5-NCS) | My branch: [KroJIak/lab5-NCS](https://github.com/KroJIak/lab5-NCS/tree/task4-b301-pickle) `task4-b301-pickle`, pull request #2 | Analysed commit: `54d165f`
+Repository: [Retr0-46/lab5-NCS](https://github.com/Retr0-46/lab5-NCS) | My branch: [KroJIak/lab5-NCS](https://github.com/KroJIak/lab5-NCS/tree/task4-b301-pickle) `task4-b301-pickle`, [pull request #2](https://github.com/Retr0-46/lab5-NCS/pull/2) | Analysed commit: `54d165f`
 
 Affected endpoint: POST /deserialize  
 File: dockerized_labs/insec_des_lab/main.py, line 40

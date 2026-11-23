@@ -44,7 +44,7 @@ The Bandit scan goes from 53 findings to 52, and the B301 findings go from 2 to 
 
 ## Three bugs in the pipeline
 
-All three of them were found while writing the reports, and each of them stopped a part of the pipeline from working.
+All three of them were found while writing the reports. Two of them stopped a part of the pipeline from working. The third one, the job dependency, would have skipped the DAST job if `if: always()` had been left out.
 
 **The DAST job never reached ZAP.** The readiness step waited for HTTP 200, but PyGoat answers `/` with a 302 redirect to the login page. The check could never pass, so the step ran out of retries and ZAP was skipped in every run. The check now accepts any status below 500.
 
@@ -61,8 +61,9 @@ The Docker Hub login needs the `DOCKERHUB_USERNAME` and `DOCKERHUB_PASSWORD` rep
 | [45008357700](https://github.com/Retr0-46/lab5-NCS/actions/runs/45008357700) | The state before the fixes. ZAP was skipped and Scout could not authenticate |
 | [45147326709](https://github.com/KroJIak/lab5-NCS/actions/runs/45147326709) | The first run where ZAP produced a report |
 | [45148621442](https://github.com/KroJIak/lab5-NCS/actions/runs/45148621442) | The run with the clearer message about the missing secrets |
-| [45151857739](https://github.com/KroJIak/lab5-NCS/actions/runs/45151857739) | The run with the upgraded ZAP action, DAST job green |
-| [45153049583](https://github.com/KroJIak/lab5-NCS/actions/runs/45153049583) | The final run, with both ZAP artifacts |
+| [45151736957](https://github.com/KroJIak/lab5-NCS/actions/runs/45151736957) | The run that introduced the upgraded ZAP action, DAST job green |
+| [45151857739](https://github.com/KroJIak/lab5-NCS/actions/runs/45151857739) | A later run with the upgraded ZAP action, DAST job green |
+| [45153049583](https://github.com/KroJIak/lab5-NCS/actions/runs/45153049583) | A run with the corrected reports and both ZAP artifacts |
 
 ## Sources
 

@@ -103,19 +103,19 @@ OK
 
 I checked that the two payload tests really do catch the old code. I ran them against the vulnerable version from commit `54d165f` and there the payload wrote its marker file and the `id` output appeared in the response. On the patched code neither happens.
 
-## Why the other scan jobs still fail
+## Why the Bandit and image scan jobs still fail
 
 The Bandit job in our pipeline still ends with a red mark, and that is expected. My patch removes one finding out of 53. The other 52 stay because they are separate problems in other labs: the app still runs Flask with debug turned on, still binds to all interfaces, still uses weak hashes and still has an `eval()` call in the command injection lab. A red Bandit job is the correct signal for this pipeline. It means the scanner is doing its job.
 
 The Docker Scout job fails before Scout even starts. The repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_PASSWORD` are not set, so the step that logs in to Docker Hub cannot run and both Scout steps are skipped. Scout needs a Docker Hub account to check, and a free one is enough, but somebody with admin rights on the repository has to add those secrets first. Because the job stops there, this run produced no CVE data at all, so nothing can be said about the base image from it.
 
-The DAST job still reports its warnings too. ZAP found missing security headers and information disclosure on the pages of the main PyGoat application, which is a different application from the lab I patched. The only way to make that job green would be to fix the headers on every page of the whole PyGoat app, which is a much bigger job than this one.
+The DAST job stays green. The ZAP action has `fail_action` set to false, so the alerts show up in the report and in the job summary without failing the step. Fixing the headers on every page of the whole PyGoat app is a much bigger job than this one.
 
 ## Pipeline run
 
 The scan that proves the fix is here: [CI run 45153049583](https://github.com/KroJIak/lab5-NCS/actions/runs/45153049583). It runs on a commit that carries the whole patch, and the `bandit-findings` artifact of that run holds the numbers above.
 
-The Bandit job in that run ends with a red mark, which is the expected result. The DAST job produced a ZAP report for the first time, and that report is in reports/dast.
+The Bandit job in that run ends with a red mark, which is the expected result. The DAST job produced a ZAP report again, and the report from the first successful run is in reports/dast.
 
 ## References
 

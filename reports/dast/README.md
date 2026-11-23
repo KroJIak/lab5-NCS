@@ -38,7 +38,7 @@ The `-a` flag adds the alpha passive scan rules and `-j` uses the modern spider 
 PyGoat is up (HTTP 302)
 ```
 
-**The job was skipped when the Bandit job failed.** The Bandit job fails on purpose, because it finds real problems. Without `if: always()` a job that depends on it would be skipped, so the dynamic scan would never run either. The DAST job now has `needs` together with `if: always()`.
+**The DAST job could have been skipped when the Bandit job failed.** The Bandit job fails on purpose, because it finds real problems. A job that depends on it is skipped when one of its dependencies fails, so without `if: always()` the dynamic scan would never have run either. The DAST job now has `needs` together with `if: always()`.
 
 **The action could not upload its own artifact.** The action version the job used, v0.12.0, uploads the report with an old version of the artifacts library. Its own upload step failed with `Create Artifact Container failed: The artifact name zap_scan is not valid`, even though the name itself was fine. The separate `Upload ZAP Report` step in the workflow was not affected, so the report was not lost. The action was upgraded to v0.15.0, and now both uploads work.
 
