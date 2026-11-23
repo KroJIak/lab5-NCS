@@ -38,14 +38,37 @@ jobs:
       - name: Build Docker Image
         run: docker build -f Dockerfile -t mytestapp:latest .
 
-      - name: Docker Scout Scan
+      # Docker Scout checks the Docker Hub entitlement of the account it finds
+      # in the runner credential store. On a public runner the only credential
+      # there is the GitHub token stored under the name "githubactions", and
+      # that account has no Docker Scout subscription. Logging in to Docker Hub
+      # first gives Scout a real account to check.
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Docker Scout Quickview
         uses: docker/scout-action@v1.15.1
         with:
+          image: mytestapp:latest
+          command: quickview
           dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          command: quickview,cves
+          write-comment: false
+
+      - name: Docker Scout CVE Scan
+        uses: docker/scout-action@v1.15.1
+        with:
+          image: mytestapp:latest
+          command: cves
+          dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
           only-severities: critical,high
           sarif-file: scout-report.sarif
+          write-comment: false
+          # Makes the step fail when critical or high CVEs are found.
           exit-code: true
 
       - name: Upload Artifact
@@ -58,7 +81,13 @@ jobs:
   dast_scan:
     name: DAST with OWASP ZAP
     runs-on: ubuntu-latest
-    
+
+    # The Bandit job fails on purpose, because it finds real issues.
+    # Without "if: always()" this job would be skipped when a needed job fails,
+    # and the dynamic scan would never run.
+    needs: [sast_scan, image_scan]
+    if: always()
+
     services:
       pygoat:
         image: pygoat/pygoat:latest
@@ -76,9 +105,12 @@ jobs:
 
       - name: Wait for PyGoat to be ready
         run: |
+          # PyGoat answers / with a 302 redirect to the login page, so a 200 is
+          # never returned here. Any HTTP status below 500 means the app is up.
           for i in {1..30}; do
-            if curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/ | grep -q "200"; then
-              echo "PyGoat is up"
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/ || true)
+            if [ -n "$code" ] && [ "$code" != "000" ] && [ "$code" -lt 500 ]; then
+              echo "PyGoat is up (HTTP $code)"
               exit 0
             fi
             echo "Waiting for PyGoat... ($i)"
@@ -99,4 +131,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: zap-dast-report
-          path: report_html.html
+          path: |
+            report_html.html
+            report_json.json
+            report_md.md
