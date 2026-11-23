@@ -108,7 +108,9 @@ The DAST job still reports its warnings too. ZAP found missing security headers 
 
 ## Pipeline run
 
-The scan that proves the fix is here: [CI run for the fixed commit](https://github.com/Retr0-46/lab5-NCS/actions/runs/45008357700)
+The scan that proves the fix is here: [CI run 45147326709](https://github.com/KroJIak/lab5-NCS/actions/runs/45147326709). It runs on the commit that carries the patch.
+
+The Bandit job in that run ends with a red mark, which is the expected result. The DAST job produced a ZAP report for the first time, and that report is in reports/dast.
 
 ## References
 
