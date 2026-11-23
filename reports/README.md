@@ -61,6 +61,7 @@ The Docker Hub login needs the `DOCKERHUB_USERNAME` and `DOCKERHUB_PASSWORD` rep
 | [45008357700](https://github.com/Retr0-46/lab5-NCS/actions/runs/45008357700) | The state before the fixes. ZAP was skipped and Scout could not authenticate |
 | [45147326709](https://github.com/KroJIak/lab5-NCS/actions/runs/45147326709) | The first run where ZAP produced a report |
 | [45148621442](https://github.com/KroJIak/lab5-NCS/actions/runs/45148621442) | The run with the clearer message about the missing secrets |
+| [45151857739](https://github.com/KroJIak/lab5-NCS/actions/runs/45151857739) | The final run. The DAST job is green and the report is uploaded |
 
 ## Sources
 
