@@ -131,11 +131,12 @@ jobs:
           exit 1
 
       - name: ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: 'http://localhost:8000'
           cmd_options: '-a -j'
           allow_issue_writing: false
+          artifact_name: zap-scan-report
 
       - name: Upload ZAP Report
         if: always()
