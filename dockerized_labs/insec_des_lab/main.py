@@ -10,9 +10,14 @@ app = Flask(__name__)
 
 # Key used to sign the tokens handed to the browser.
 # It stays on the server, so a user cannot produce a valid token on their own.
-SECRET_KEY = os.environ.get(
-    "INSEC_DES_SECRET_KEY", "insecure-des-lab-local-development-key"
-)
+# It has to be set through the environment, because a key that ships with the
+# source code is a public key.
+SECRET_KEY = os.environ.get("INSEC_DES_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "INSEC_DES_SECRET_KEY is not set. The signing key must not be part of "
+        "the source code, so the lab refuses to start without it."
+    )
 
 ALLOWED_FIELDS = ("username", "is_admin")
 

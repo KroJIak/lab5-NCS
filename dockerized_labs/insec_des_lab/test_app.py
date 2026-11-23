@@ -1,9 +1,13 @@
 import base64
 import json
+import os
 import pickle
+import tempfile
 import unittest
 
-from dockerized_labs.insec_des_lab.main import app, serialize_user
+os.environ.setdefault("INSEC_DES_SECRET_KEY", "test-key-for-the-unit-tests")
+
+from dockerized_labs.insec_des_lab.main import app, serialize_user  # noqa: E402
 
 
 class InsecureDeserializationTests(unittest.TestCase):
@@ -34,10 +38,36 @@ class InsecureDeserializationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Invalid token signature", response.data)
 
-    def test_pickle_payload_is_rejected(self):
+    def test_pickle_payload_does_not_run_code(self):
+        marker = os.path.join(tempfile.gettempdir(), "insec_des_lab_payload_marker")
+
         class Payload:
             def __reduce__(self):
-                return (eval, ("__import__('os').popen('id').read()",))
+                return (
+                    exec,
+                    (f"open({marker!r}, 'w').write('executed')",),
+                )
+
+        if os.path.exists(marker):
+            os.remove(marker)
+
+        payload = base64.b64encode(pickle.dumps(Payload())).decode()
+
+        response = self.client.post("/deserialize", data={"serialized_data": payload})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            os.path.exists(marker),
+            "the payload ran on the server",
+        )
+
+    def test_pickle_payload_output_is_not_shown(self):
+        class Payload:
+            def __reduce__(self):
+                return (
+                    exec,
+                    ("raise Exception(__import__('os').popen('id').read())",),
+                )
 
         payload = base64.b64encode(pickle.dumps(Payload())).decode()
 
