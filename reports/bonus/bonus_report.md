@@ -117,4 +117,4 @@ The Bandit job in that run ends with a red mark, which is the expected result. T
 - [MITRE CWE-502](https://cwe.mitre.org/data/definitions/502.html)
 - [Bandit B301 documentation](https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b301-pickle)
 - [OWASP Deserialization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html)
-- [My Task 4 report on this finding](reports/task4/pickle_deserialization_report.md)
+- [My Task 4 report on this finding](../task4/pickle_deserialization_report.md)
