@@ -32,7 +32,7 @@ Every member of the group picked a different finding from the Bandit scan and wr
 | Mark | File read outside the blog folder | CWE-22, Path Traversal | [report](path_traversal/report.md) |
 | KroJIak | `pickle.loads()` on form input | CWE-502, Unsafe Deserialization | [report](task4/pickle_deserialization_report.md) |
 
-The Bandit scan of the whole repository gives 53 findings, 30 Medium and 23 High. The raw output for the pickle rule is in [task4/bandit-b301.txt](task4/bandit-b301.txt).
+The Bandit scan of the whole repository gives 53 findings, 30 Medium and 23 High, on the code before my patch. The raw output for the pickle rule is in [task4/bandit-b301.txt](task4/bandit-b301.txt).
 
 ## Bonus task, patching the code
 
