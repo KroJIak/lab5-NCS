@@ -30,9 +30,7 @@ ZAP then runs a baseline scan against the running application.
 
 The `-a` flag adds the alpha passive scan rules and `-j` uses the modern spider next to the traditional one.
 
-## Two more problems we had to fix
-
-**The report was uploaded by our step, but not by the action.** The action version the job used, v0.12.0, uploads the report with an old version of the artifacts library. Its own upload step failed with `Create Artifact Container failed: The artifact name zap_scan is not valid`, even though the name itself was fine. The separate `Upload ZAP Report` step in the workflow was not affected, so the report was not lost. The action was upgraded to v0.15.0, and now both uploads work.
+## Three problems we had to fix
 
 **The readiness step waited for the wrong code.** It looked for HTTP 200, but PyGoat answers `/` with a 302 redirect to the login page, so the check could never pass. The step ran out of retries and exited 1, and the ZAP step was skipped every time. The check now accepts any status below 500, and it prints what it got.
 
@@ -40,7 +38,9 @@ The `-a` flag adds the alpha passive scan rules and `-j` uses the modern spider 
 PyGoat is up (HTTP 302)
 ```
 
-We also gave the job `needs` together with `if: always()`. The Bandit job fails on purpose, because it finds real problems. Without `if: always()` the DAST job would be skipped whenever a job it depends on fails, so the dynamic scan would never run either.
+**The job was skipped when the Bandit job failed.** The Bandit job fails on purpose, because it finds real problems. Without `if: always()` a job that depends on it would be skipped, so the dynamic scan would never run either. The DAST job now has `needs` together with `if: always()`.
+
+**The action could not upload its own artifact.** The action version the job used, v0.12.0, uploads the report with an old version of the artifacts library. Its own upload step failed with `Create Artifact Container failed: The artifact name zap_scan is not valid`, even though the name itself was fine. The separate `Upload ZAP Report` step in the workflow was not affected, so the report was not lost. The action was upgraded to v0.15.0, and now both uploads work.
 
 ## What the scan found
 
