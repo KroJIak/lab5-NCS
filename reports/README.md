@@ -44,7 +44,9 @@ The Bandit scan goes from 53 findings to 52, and the B301 findings go from 2 to 
 
 ## Three bugs in the pipeline
 
-All three of them were found while writing the reports. Two of them stopped a part of the pipeline from working. The third one, the job dependency, would have skipped the DAST job if `if: always()` had been left out.
+All three of them were found while writing the reports. Two of them stopped a part of the pipeline from working: the DAST job never reached ZAP, and the image scan could not run at all. The third one, the failed artifact upload, turned the ZAP step red, but the report itself was never lost, because our own upload step was not affected.
+
+There was a fourth problem as well. The DAST job now has `needs` together with `if: always()`. Without `if: always()` the job would have been skipped whenever the Bandit job failed, and the Bandit job fails on purpose.
 
 **The DAST job never reached ZAP.** The readiness step waited for HTTP 200, but PyGoat answers `/` with a 302 redirect to the login page. The check could never pass, so the step ran out of retries and ZAP was skipped in every run. The check now accepts any status below 500.
 

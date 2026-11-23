@@ -109,7 +109,7 @@ The Bandit job in our pipeline still ends with a red mark, and that is expected.
 
 The Docker Scout job fails before Scout even starts. The repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_PASSWORD` are not set, so the step that logs in to Docker Hub cannot run and both Scout steps are skipped. Scout needs a Docker Hub account to check, and a free one is enough, but somebody with admin rights on the repository has to add those secrets first. Because the job stops there, this run produced no CVE data at all, so nothing can be said about the base image from it.
 
-The DAST job stays green. The ZAP action has `fail_action` set to false, so the alerts show up in the report and in the job summary without failing the step. The report lists 18 warnings, mostly missing security headers on the pages of the main PyGoat application, which is a different application from the lab I patched. Fixing those headers on every page of the whole app is a much bigger job than this one.
+The DAST job stays green. The ZAP action has a `fail_action` input and it is false by default, so the alerts show up in the report and in the job summary without failing the step. The job log lists 18 warnings in 18 rule groups, mostly missing security headers on the pages of the main PyGoat application, which is a different application from the lab I patched. Fixing those headers on every page of the whole app is a much bigger job than this one.
 
 ## Pipeline run
 
